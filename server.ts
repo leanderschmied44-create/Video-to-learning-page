@@ -136,8 +136,49 @@ async function startServer() {
           }
         }
       }
+
+      let message = 'Internal server error during content generation';
+      let errorStr = '';
+      if (error && error.message) {
+        errorStr = String(error.message);
+      } else if (error && typeof error === 'string') {
+        errorStr = error;
+      } else {
+        errorStr = String(error);
+      }
+
+      // If the message is structured JSON, extract the message details
+      if (errorStr.trim().startsWith('{')) {
+        try {
+          const parsed = JSON.parse(errorStr);
+          if (parsed?.error?.message) {
+            message = parsed.error.message;
+          } else if (parsed?.message) {
+            message = parsed.message;
+          } else {
+            message = errorStr;
+          }
+        } catch (_) {
+          message = errorStr;
+        }
+      } else {
+        message = errorStr;
+      }
+
+      // Format rate limit & quota messages to be extremely actionable and helpful
+      const isQuotaExceeded = 
+        statusCode === 429 || 
+        errorStr.toLowerCase().includes('quota') || 
+        errorStr.toLowerCase().includes('rate') || 
+        errorStr.toLowerCase().includes('exhausted') || 
+        errorStr.toLowerCase().includes('429');
+
+      if (isQuotaExceeded) {
+        statusCode = 429;
+        message = `Google AI Studio free tier quota limit exceeded. Since multiple built apps share the default API quota, limits can occasionally be reached during peak activities.\n\nTo resolve this:\n1. Please wait 30-60 seconds and click the "Retry" button.\n2. For higher limits, you can add your own free custom Gemini API key via the "Settings" (gear icon) menu in the AI Studio sidebar. Our backend will use your key automatically to give you independent, higher quota limit lanes.`;
+      }
       
-      return res.status(statusCode).json({ error: error.message || 'Internal server error during content generation' });
+      return res.status(statusCode).json({ error: message });
     }
   });
 

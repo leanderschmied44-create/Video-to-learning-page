@@ -54,6 +54,7 @@ export default forwardRef(function ContentContainer(
   const [isEditingSpec, setIsEditingSpec] = useState(false);
   const [editedSpec, setEditedSpec] = useState('');
   const [activeTabIndex, setActiveTabIndex] = useState(0); // 0: Render, 1: Code, 2: Spec
+  const [retryTrigger, setRetryTrigger] = useState(0);
 
   // Expose methods to the parent component through ref
   useImperativeHandle(ref, () => ({
@@ -140,7 +141,7 @@ export default forwardRef(function ContentContainer(
     }
 
     generateContent();
-  }, [contentBasis, preSeededSpec, preSeededCode]);
+  }, [contentBasis, preSeededSpec, preSeededCode, retryTrigger]);
 
   // Re-render iframe when code changes
   useEffect(() => {
@@ -232,35 +233,80 @@ export default forwardRef(function ContentContainer(
     </div>
   );
 
-  const renderErrorState = () => (
-    <div
-      style={{
-        alignItems: 'center',
-        color: 'var(--color-error)',
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        justifyContent: 'center',
-        marginTop: '-2.5rem',
-        textAlign: 'center',
-      }}>
+  const renderErrorState = () => {
+    const isRateLimit = error && (
+      error.toLowerCase().includes('quota') || 
+      error.toLowerCase().includes('limit') || 
+      error.toLowerCase().includes('429') || 
+      error.toLowerCase().includes('exhausted')
+    );
+
+    return (
       <div
         style={{
-          fontFamily: 'var(--font-symbols)',
-          fontSize: '5rem',
+          alignItems: 'center',
+          color: 'light-dark(#2c2c2c, #f4f4f4)',
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          justifyContent: 'center',
+          marginTop: '-2.5rem',
+          textAlign: 'center',
+          padding: '2rem',
+          maxWidth: '600px',
+          marginLeft: 'auto',
+          marginRight: 'auto',
         }}>
-        error
+        <div
+          style={{
+            fontFamily: 'var(--font-symbols)',
+            fontSize: '4.5rem',
+            color: isRateLimit ? '#e5a50a' : 'var(--color-error)',
+            marginBottom: '1rem',
+          }}>
+          {isRateLimit ? 'warning' : 'error'}
+        </div>
+        <h3 style={{ fontSize: '1.5rem', marginBottom: '0.75rem', fontWeight: 600 }}>
+          {isRateLimit ? 'Quota Limit Exceeded' : 'Generation Error'}
+        </h3>
+        <div 
+          style={{ 
+            fontSize: '0.95rem', 
+            lineHeight: '1.6', 
+            marginBottom: '1.5rem', 
+            whiteSpace: 'pre-wrap',
+            textAlign: 'left',
+            background: 'light-dark(#fafafa, #1e1e1e)',
+            padding: '1.25rem',
+            borderRadius: '8px',
+            border: '1px solid light-dark(#e3e3e3, #333)',
+          }}>
+          {error || 'Something went wrong during generation. Please verify your connection and settings.'}
+        </div>
+        
+        {!contentBasis.startsWith('http://') &&
+        !contentBasis.startsWith('https://') ? (
+          <p style={{ marginTop: '0.5rem', color: 'var(--color-error)' }}>
+            (<strong>NOTE:</strong> URL must begin with http:// or https://)
+          </p>
+        ) : null}
+
+        <button
+          onClick={() => setRetryTrigger((prev) => prev + 1)}
+          className="button-primary"
+          style={{
+            marginTop: '0.5rem',
+            padding: '10px 20px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
+          Retry Generation
+        </button>
       </div>
-      <h3 style={{fontSize: '1.5rem', marginBottom: '0.5rem'}}>Error</h3>
-      <p>{error || 'Something went wrong'}</p>
-      {!contentBasis.startsWith('http://') &&
-      !contentBasis.startsWith('https://') ? (
-        <p style={{marginTop: '0.5rem'}}>
-          (<strong>NOTE:</strong> URL must begin with http:// or https://)
-        </p>
-      ) : null}
-    </div>
-  );
+    );
+  };
 
   // Styles for tab list
   const tabListStyle = {
