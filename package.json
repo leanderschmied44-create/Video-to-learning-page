@@ -1,0 +1,32 @@
+{
+  "name": "video-to-learning-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx server.ts",
+    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+    "start": "node dist/server.cjs",
+    "preview": "vite preview",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@google/genai": "latest",
+    "@monaco-editor/react": "latest",
+    "express": "^5.2.1",
+    "googleapis": "latest",
+    "normalize.css": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-tabs": "latest"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "esbuild": "^0.28.0",
+    "tsx": "^4.22.3",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Video to Learning App",
+  "description": "Instantly convert any YouTube video into an interactive learning app, coded by Gemini.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
